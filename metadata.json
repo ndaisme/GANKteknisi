@@ -1,0 +1,6 @@
+{
+  "name": "Gank Service",
+  "description": "Aplikasi manajemen servis smartphone modern dengan fitur offline-first, tracking servis, dan manajemen sparepart.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
