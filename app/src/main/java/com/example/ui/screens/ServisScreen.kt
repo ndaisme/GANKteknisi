@@ -49,13 +49,14 @@ fun ServisScreen(viewModel: MainViewModel) {
             
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
                 items(serviceJobs) { job ->
-                    ServiceJobCard(job)
+                    ServiceJobCard(job, viewModel)
                 }
             }
         }
     }
 
     if (showDialog) {
+        var noService by remember { mutableStateOf("") }
         var brand by remember { mutableStateOf("") }
         var model by remember { mutableStateOf("") }
         var imei by remember { mutableStateOf("") }
@@ -87,6 +88,7 @@ fun ServisScreen(viewModel: MainViewModel) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                     
+                    item { NeoTextField(value = noService, onValueChange = { noService = it }, label = "No Servis (Manual)") }
                     item { NeoTextField(value = brand, onValueChange = { brand = it }, label = "Brand (e.g. Samsung)") }
                     item { NeoTextField(value = model, onValueChange = { model = it }, label = "Model") }
                     item { NeoTextField(value = imei, onValueChange = { imei = it }, label = "IMEI/SN") }
@@ -123,6 +125,7 @@ fun ServisScreen(viewModel: MainViewModel) {
                             NeoButton(
                                 onClick = {
                                     viewModel.addServiceJob(
+                                        noService = noService,
                                         customerId = "default_customer", 
                                         brand = brand, 
                                         model = model, 

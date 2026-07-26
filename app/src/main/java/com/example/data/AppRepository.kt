@@ -18,6 +18,10 @@ class AppRepository(private val appDao: AppDao) {
     suspend fun updateServiceStatus(id: String, status: String) {
         appDao.updateServiceStatus(id, status)
     }
+
+    suspend fun updateWarranty(id: String, tanggalMulai: Long, jenis: String, durasiHari: Int, riwayatKlaim: String) {
+        appDao.updateWarranty(id, tanggalMulai, jenis, durasiHari, riwayatKlaim)
+    }
 }
 
 class AppContainer(private val context: Context) {

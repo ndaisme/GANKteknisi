@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -81,7 +82,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         }
 
         items(serviceJobs.take(5)) { job ->
-            ServiceJobCard(job)
+            ServiceJobCard(job, viewModel)
         }
         
         if (serviceJobs.isEmpty()) {
@@ -117,8 +118,10 @@ fun StatCard(title: String, value: String, accentColor: Color, modifier: Modifie
 }
 
 @Composable
-fun ServiceJobCard(job: ServiceJob) {
+fun ServiceJobCard(job: ServiceJob, viewModel: MainViewModel) {
     var showChecklist by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showStatusDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showWarrantyDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     NeoCard(
         modifier = Modifier.fillMaxWidth(),
@@ -129,13 +132,25 @@ fun ServiceJobCard(job: ServiceJob) {
         strokeWidth = 4.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("${job.brand} ${job.model}", fontWeight = FontWeight.Black, color = BlackPrimary, style = MaterialTheme.typography.titleMedium)
-                StatusBadge(job.status)
+                Box(modifier = Modifier.clickable { showStatusDialog = true }) {
+                    StatusBadge(job.status)
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
+            if (job.noService.isNotEmpty()) {
+                Text("No Servis: ${job.noService}", color = AccentBlue, fontWeight = FontWeight.Bold)
+            }
             Text("Keluhan: ${job.keluhan}", color = BlackSurfaceVariant, fontWeight = FontWeight.Medium)
             Text("Diagnosa: ${job.diagnosa}", color = BlackSurfaceVariant, fontWeight = FontWeight.Medium)
+            if (job.garansiJenis.isNotEmpty()) {
+                val hariBerjalan = ((System.currentTimeMillis() - job.garansiTanggalMulai) / (1000 * 60 * 60 * 24)).toInt()
+                val sisaHari = (job.garansiDurasiHari - hariBerjalan).coerceAtLeast(0)
+                val textSisa = if (sisaHari > 0) "Sisa: $sisaHari hari" else "Habis"
+                val colorGaransi = if (sisaHari > 0) AccentBlue else AccentRed
+                Text("Garansi: ${job.garansiJenis} ($textSisa)", color = colorGaransi, fontWeight = FontWeight.Bold)
+            }
             
             Spacer(modifier = Modifier.height(12.dp))
             Row(
@@ -143,10 +158,13 @@ fun ServiceJobCard(job: ServiceJob) {
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = { /* TODO: Open Notes */ }) {
-                    Text("Catatan", color = BlackPrimary, fontWeight = FontWeight.Bold)
+                if (job.status == "Selesai" || job.status == "Diambil") {
+                    TextButton(onClick = { showWarrantyDialog = true }) {
+                        Text("Garansi", color = AccentBlue, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                
                 com.example.ui.components.NeoButton(
                     onClick = { showChecklist = true },
                     backgroundColor = White,
@@ -190,11 +208,122 @@ fun ServiceJobCard(job: ServiceJob) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         com.example.ui.components.NeoButton(
-                            onClick = { showChecklist = false },
+                            onClick = { 
+                                showChecklist = false
+                                if (job.status == "Menunggu") {
+                                    viewModel.updateServiceStatus(job.id, "Diagnosa")
+                                }
+                            },
                             backgroundColor = AccentSilver,
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                         ) {
                             Text("Simpan", color = BlackPrimary, fontWeight = FontWeight.Black)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showStatusDialog) {
+        val nextStatuses = when(job.status) {
+            "Menunggu" -> listOf("Diagnosa", "Batal")
+            "Diagnosa" -> listOf("Menunggu Sparepart", "Pengerjaan", "Batal")
+            "Menunggu Sparepart" -> listOf("Pengerjaan", "Batal")
+            "Pengerjaan" -> listOf("QC", "Selesai", "Batal")
+            "QC" -> listOf("Selesai", "Pengerjaan")
+            "Selesai" -> listOf("Diambil")
+            "Diambil" -> listOf()
+            "Batal" -> listOf()
+            else -> listOf("Menunggu", "Diagnosa", "Menunggu Sparepart", "Pengerjaan", "QC", "Selesai", "Diambil", "Batal")
+        }
+        
+        if (nextStatuses.isNotEmpty()) {
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showStatusDialog = false }) {
+                NeoCard(
+                    backgroundColor = White,
+                    shadowColor = AccentBlue,
+                    borderColor = BlackPrimary,
+                    cornerRadius = 24.dp,
+                    strokeWidth = 4.dp
+                ) {
+                    Column(modifier = Modifier.padding(24.dp).fillMaxWidth()) {
+                        Text("Update Status (Saat Ini: ${job.status})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = BlackPrimary)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                            items(nextStatuses) { status ->
+                                TextButton(
+                                    onClick = {
+                                        viewModel.updateServiceStatus(job.id, status)
+                                        showStatusDialog = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Ubah ke $status", color = AccentBlue, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            showStatusDialog = false
+        }
+    }
+
+    if (showWarrantyDialog) {
+        var jenis by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(job.garansiJenis) }
+        var durasi by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(if (job.garansiDurasiHari > 0) job.garansiDurasiHari.toString() else "") }
+        var riwayat by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(job.garansiRiwayatKlaim) }
+
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showWarrantyDialog = false }) {
+            NeoCard(
+                backgroundColor = White,
+                shadowColor = AccentBlue,
+                borderColor = BlackPrimary,
+                cornerRadius = 24.dp,
+                strokeWidth = 4.dp
+            ) {
+                LazyColumn(modifier = Modifier.padding(24.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    item {
+                        Text("Pengaturan Garansi", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = BlackPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    item { com.example.ui.components.NeoTextField(value = jenis, onValueChange = { jenis = it }, label = "Jenis Garansi (e.g. LCD, Baterai)") }
+                    item { 
+                        com.example.ui.components.NeoTextField(
+                            value = durasi, 
+                            onValueChange = { durasi = it }, 
+                            label = "Durasi (Hari)", 
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                        ) 
+                    }
+                    item { com.example.ui.components.NeoTextField(value = riwayat, onValueChange = { riwayat = it }, label = "Riwayat Klaim", singleLine = false) }
+
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { showWarrantyDialog = false }) {
+                                Text("Batal", color = GrayText, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            com.example.ui.components.NeoButton(
+                                onClick = { 
+                                    viewModel.updateWarranty(
+                                        id = job.id,
+                                        tanggalMulai = if (job.garansiTanggalMulai == 0L) System.currentTimeMillis() else job.garansiTanggalMulai,
+                                        jenis = jenis,
+                                        durasiHari = durasi.toIntOrNull() ?: 0,
+                                        riwayatKlaim = riwayat
+                                    )
+                                    showWarrantyDialog = false
+                                },
+                                backgroundColor = AccentBlue
+                            ) {
+                                Text("Simpan", color = White, fontWeight = FontWeight.Black)
+                            }
                         }
                     }
                 }

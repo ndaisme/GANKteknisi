@@ -36,6 +36,7 @@ class MainViewModel(private val repository: AppRepository) : ViewModel() {
     }
 
     fun addServiceJob(
+        noService: String,
         customerId: String,
         brand: String,
         model: String,
@@ -49,6 +50,7 @@ class MainViewModel(private val repository: AppRepository) : ViewModel() {
         viewModelScope.launch {
             val newJob = ServiceJob(
                 id = UUID.randomUUID().toString(),
+                noService = noService,
                 customerId = customerId,
                 brand = brand,
                 model = model,
@@ -68,6 +70,12 @@ class MainViewModel(private val repository: AppRepository) : ViewModel() {
     fun updateServiceStatus(id: String, status: String) {
         viewModelScope.launch {
             repository.updateServiceStatus(id, status)
+        }
+    }
+
+    fun updateWarranty(id: String, tanggalMulai: Long, jenis: String, durasiHari: Int, riwayatKlaim: String) {
+        viewModelScope.launch {
+            repository.updateWarranty(id, tanggalMulai, jenis, durasiHari, riwayatKlaim)
         }
     }
 

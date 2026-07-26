@@ -22,4 +22,7 @@ interface AppDao {
 
     @Query("UPDATE service_jobs SET status = :status WHERE id = :id")
     suspend fun updateServiceStatus(id: String, status: String)
+
+    @Query("UPDATE service_jobs SET garansiTanggalMulai = :tanggalMulai, garansiJenis = :jenis, garansiDurasiHari = :durasiHari, garansiRiwayatKlaim = :riwayatKlaim WHERE id = :id")
+    suspend fun updateWarranty(id: String, tanggalMulai: Long, jenis: String, durasiHari: Int, riwayatKlaim: String)
 }
