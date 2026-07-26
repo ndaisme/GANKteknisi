@@ -73,6 +73,51 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 
         item {
             Spacer(modifier = Modifier.height(8.dp))
+            NeoCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = White,
+                shadowColor = AccentBlue,
+                borderColor = BlackPrimary,
+                cornerRadius = 16.dp,
+                strokeWidth = 4.dp,
+                shadowOffset = 6.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "Analisis Statistik Kerusakan", 
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = BlackPrimary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.weight(0.6f).height(12.dp).background(AccentBlue, RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp)))
+                        Box(modifier = Modifier.weight(0.2f).height(12.dp).background(AccentRed))
+                        Box(modifier = Modifier.weight(0.2f).height(12.dp).background(BlackPrimary, RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)))
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("60%", color = AccentBlue, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("LCD Pecah", color = BlackSurfaceVariant, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("20%", color = AccentRed, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("Konektor Rusak", color = BlackSurfaceVariant, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("20%", color = BlackPrimary, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+                            Text("Baterai Rusak", color = BlackSurfaceVariant, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Servis Terbaru", 
                 style = MaterialTheme.typography.titleLarge,

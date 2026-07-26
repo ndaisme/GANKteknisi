@@ -90,7 +90,7 @@ fun AppScaffold(viewModel: MainViewModel) {
             composable(Screen.Dashboard.route) { DashboardScreen(viewModel, navController) }
             composable(Screen.Servis.route) { ServisScreen(viewModel) }
             composable(Screen.Toolkit.route) { ToolkitScreen() }
-            composable(Screen.Stok.route) { StokScreen() }
+            composable(Screen.Stok.route) { StokScreen(viewModel) }
             composable(Screen.Profil.route) { ProfilScreen() }
         }
     }

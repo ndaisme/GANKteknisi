@@ -12,9 +12,48 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
+data class Sparepart(
+    val id: String = UUID.randomUUID().toString(),
+    val nama: String,
+    val kategori: String,
+    val hargaModal: Double,
+    val hargaJual: Double,
+    val stok: Int
+)
+
 class MainViewModel(private val repository: AppRepository) : ViewModel() {
+
+    private val _spareparts = MutableStateFlow<List<Sparepart>>(listOf(
+        Sparepart(nama = "LCD Samsung A51", kategori = "Layar", hargaModal = 300000.0, hargaJual = 500000.0, stok = 5),
+        Sparepart(nama = "Baterai iPhone X", kategori = "Baterai", hargaModal = 150000.0, hargaJual = 250000.0, stok = 10),
+        Sparepart(nama = "Konektor Cas Xiaomi Note 10", kategori = "Konektor", hargaModal = 25000.0, hargaJual = 75000.0, stok = 2)
+    ))
+    val spareparts: StateFlow<List<Sparepart>> = _spareparts.asStateFlow()
+
+    fun addSparepart(nama: String, kategori: String, hargaModal: Double, hargaJual: Double, stok: Int) {
+        val newList = _spareparts.value.toMutableList()
+        newList.add(Sparepart(nama = nama, kategori = kategori, hargaModal = hargaModal, hargaJual = hargaJual, stok = stok))
+        _spareparts.value = newList
+    }
+
+    fun updateSparepart(id: String, nama: String, kategori: String, hargaModal: Double, hargaJual: Double, stok: Int) {
+        val newList = _spareparts.value.toMutableList()
+        val index = newList.indexOfFirst { it.id == id }
+        if (index != -1) {
+            newList[index] = Sparepart(id = id, nama = nama, kategori = kategori, hargaModal = hargaModal, hargaJual = hargaJual, stok = stok)
+            _spareparts.value = newList
+        }
+    }
+
+    fun deleteSparepart(id: String) {
+        val newList = _spareparts.value.toMutableList()
+        newList.removeAll { it.id == id }
+        _spareparts.value = newList
+    }
 
     val customers: StateFlow<List<Customer>> = repository.allCustomers
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
