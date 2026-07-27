@@ -32,10 +32,6 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Adjust Gradle properties for CI
-      run: |
-        sed -i 's/kotlin.compiler.execution.strategy=in-process/# kotlin.compiler.execution.strategy=in-process/' gradle.properties
-
     - name: Decode debug keystore
       run: base64 -d debug.keystore.base64 > debug.keystore || echo "No base64 keystore found, skipping..."
 
