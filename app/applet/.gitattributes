@@ -1,0 +1,12 @@
+# Git Attributes for Gradle Projects
+* text=auto
+
+# Ensure binary files are not modified by line-ending conversions
+*.jar binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.keystore binary
+*.jks binary
